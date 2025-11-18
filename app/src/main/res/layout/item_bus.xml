@@ -63,7 +63,7 @@
             android:text="08:30 AM"
             android:textColor="@color/gray"
             android:textSize="14sp"
-            android:drawableStart="@drawable/ic_time"
+
             android:drawablePadding="8dp"
             android:layout_marginTop="8dp" />
 
@@ -75,7 +75,7 @@
             android:text="45/50"
             android:textColor="@color/gray"
             android:textSize="14sp"
-            android:drawableStart="@drawable/ic_passenger"
+
             android:drawablePadding="8dp"
             android:layout_marginTop="4dp" />
 

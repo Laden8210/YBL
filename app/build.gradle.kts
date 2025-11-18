@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "com.example.ybl"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.ybl"
@@ -35,6 +35,11 @@ android {
 }
 
 dependencies {
+    implementation (libs.retrofit)
+    implementation (libs.com.squareup.retrofit2.converter.gson10)
+    implementation (libs.okhttp)
+    implementation (libs.logging.interceptor)
+    implementation (libs.gson)
 
     implementation(libs.appcompat)
     implementation(libs.material)
