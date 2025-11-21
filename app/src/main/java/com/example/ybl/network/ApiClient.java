@@ -10,7 +10,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
-    private static final String BASE_URL = "http://192.168.68.113:8000/api/";
+    private static final String BASE_URL = "https://busdroppoint.online/api/";
     private static volatile ApiClient instance;
     private final Retrofit retrofit;
 

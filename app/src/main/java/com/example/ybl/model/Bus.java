@@ -36,6 +36,12 @@ public class Bus implements Serializable {
     @SerializedName("updated_at")
     private String updatedAt;
 
+    @SerializedName("current_assignment")
+    private AssignedStaff currentAssignment;
+
+    @SerializedName("latest_location")
+    private TripLocation latestLocation;
+
     public int getId() {
         return id;
     }
@@ -114,5 +120,21 @@ public class Bus implements Serializable {
 
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public AssignedStaff getCurrentAssignment() {
+        return currentAssignment;
+    }
+
+    public void setCurrentAssignment(AssignedStaff currentAssignment) {
+        this.currentAssignment = currentAssignment;
+    }
+
+    public TripLocation getLatestLocation() {
+        return latestLocation;
+    }
+
+    public void setLatestLocation(TripLocation latestLocation) {
+        this.latestLocation = latestLocation;
     }
 }

@@ -57,8 +57,8 @@ public class LoginActivity extends AppCompatActivity {
         buttonLogin.setOnClickListener(v -> attemptLogin());
 
         buttonRegister.setOnClickListener(v -> {
-
-            Toast.makeText(LoginActivity.this, "Registration feature coming soon", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+            startActivity(intent);
         });
     }
 

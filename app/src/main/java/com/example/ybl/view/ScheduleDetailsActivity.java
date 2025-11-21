@@ -1,5 +1,6 @@
 package com.example.ybl.view;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -7,11 +8,18 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.example.ybl.R;
+import com.example.ybl.fragments.ReportIssueDialog;
+import com.example.ybl.interfaces.ApiCallback;
+import com.example.ybl.model.CreateTripRequest;
+import com.example.ybl.model.CreateTripResponse;
 import com.example.ybl.model.Schedule;
+import com.example.ybl.repository.DriverRepository;
+import com.example.ybl.util.SessionManager;
 import com.google.android.material.appbar.MaterialToolbar;
 
 public class ScheduleDetailsActivity extends AppCompatActivity {
@@ -24,6 +32,7 @@ public class ScheduleDetailsActivity extends AppCompatActivity {
     private TextView tvStartPoint, tvEndPoint, tvDistance, tvEstimatedDuration;
     private TextView tvDayOfWeek, tvRecurring, tvEffectiveDate, tvEndDate;
     private Button btnStartTrip, btnReportIssue, btnNavigate;
+    private DriverRepository driverRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +43,8 @@ public class ScheduleDetailsActivity extends AppCompatActivity {
         setupToolbar();
         loadScheduleData();
         setupClickListeners();
+
+        driverRepository = new DriverRepository(this);
     }
 
     private void initViews() {
@@ -59,6 +70,10 @@ public class ScheduleDetailsActivity extends AppCompatActivity {
         btnReportIssue = findViewById(R.id.btnReportIssue);
         btnNavigate = findViewById(R.id.btnNavigate);
 
+
+        if(SessionManager.getInstance(this).getUserDetails().getRole().equalsIgnoreCase("supervisor")){
+            btnStartTrip.setVisibility(View.GONE);
+        }
     }
 
     private void setupToolbar() {
@@ -172,24 +187,57 @@ public class ScheduleDetailsActivity extends AppCompatActivity {
     private void startTrip() {
         Schedule schedule = (Schedule) getIntent().getSerializableExtra(EXTRA_SCHEDULE);
         if (schedule != null) {
-            Toast.makeText(this, "Starting trip: " + schedule.getRoute().getRouteName(), Toast.LENGTH_SHORT).show();
-            // Implement start trip logic
+            new AlertDialog.Builder(this)
+                    .setTitle("Start Trip")
+                    .setMessage("Are you sure you want to start this trip?")
+                    .setPositiveButton("Start", (dialog, which) -> {
+                        createTrip(schedule);
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
         }
     }
 
+    private void createTrip(Schedule schedule) {
+        CreateTripRequest request = new CreateTripRequest(schedule.getId(), schedule.getBusId());
+        driverRepository.createTrip(request, new ApiCallback<CreateTripResponse>() {
+            @Override
+            public void onSuccess(CreateTripResponse response) {
+                runOnUiThread(() -> {
+                    Toast.makeText(ScheduleDetailsActivity.this, response.getMessage(), Toast.LENGTH_SHORT).show();
+                    // Optionally, update the UI or navigate to another screen
+                });
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                runOnUiThread(() -> {
+                    Toast.makeText(ScheduleDetailsActivity.this, "Failed to create trip: " + errorMessage, Toast.LENGTH_SHORT).show();
+                });
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                runOnUiThread(() -> {
+                    Toast.makeText(ScheduleDetailsActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
+    }
+
     private void reportIssue() {
-        Schedule schedule = (Schedule) getIntent().getSerializableExtra(EXTRA_SCHEDULE);
-        if (schedule != null) {
-            Toast.makeText(this, "Reporting issue for: " + schedule.getRoute().getRouteName(), Toast.LENGTH_SHORT).show();
-            // Implement report issue logic
-        }
+        ReportIssueDialog dialog = new ReportIssueDialog();
+        dialog.show(getSupportFragmentManager(), "ReportIssueDialog");
     }
 
     private void navigateToRoute() {
         Schedule schedule = (Schedule) getIntent().getSerializableExtra(EXTRA_SCHEDULE);
-        if (schedule != null) {
-            Toast.makeText(this, "Navigating to route: " + schedule.getRoute().getRouteName(), Toast.LENGTH_SHORT).show();
-            // Implement navigation logic
+        if (schedule != null && schedule.getRoute() != null) {
+            Intent intent = new Intent(ScheduleDetailsActivity.this, RouteMapActivity.class);
+            intent.putExtra(RouteMapActivity.EXTRA_SCHEDULE, schedule);
+            startActivity(intent);
+        } else {
+            Toast.makeText(this, "Route information not available", Toast.LENGTH_SHORT).show();
         }
     }
 

@@ -4,35 +4,71 @@ import com.google.gson.annotations.SerializedName;
 
 public class DriverDashboard {
 
-
     @SerializedName("current_trip")
-    private int currentTrip;
+    private Trip currentTrip;
+
     @SerializedName("today_trips")
-    private int todayTrip;
+    private int todayTrips;
+
     @SerializedName("assigned_bus")
-    private AssignedBus assignBus;
+    private AssignedBus assignedBus;
 
-    public AssignedBus getAssignBus() {
-        return assignBus;
-    }
-
-    public void setAssignBus(AssignedBus assignBus) {
-        this.assignBus = assignBus;
-    }
-
-    public int getCurrentTrip() {
+    public Trip getCurrentTrip() {
         return currentTrip;
     }
 
-    public void setCurrentTrip(int currentTrip) {
+    public void setCurrentTrip(Trip currentTrip) {
         this.currentTrip = currentTrip;
     }
 
-    public int getTodayTrip() {
-        return todayTrip;
+    public int getTodayTrips() {
+        return todayTrips;
     }
 
-    public void setTodayTrip(int todayTrip) {
-        this.todayTrip = todayTrip;
+    public void setTodayTrips(int todayTrips) {
+        this.todayTrips = todayTrips;
+    }
+
+    public AssignedBus getAssignedBus() {
+        return assignedBus;
+    }
+
+    public void setAssignedBus(AssignedBus assignedBus) {
+        this.assignedBus = assignedBus;
+    }
+
+    public static class AssignedBus {
+        @SerializedName("id")
+        private int id;
+
+        @SerializedName("bus_number")
+        private String busNumber;
+
+        @SerializedName("license_plate")
+        private String licensePlate;
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public String getBusNumber() {
+            return busNumber;
+        }
+
+        public void setBusNumber(String busNumber) {
+            this.busNumber = busNumber;
+        }
+
+        public String getLicensePlate() {
+            return licensePlate;
+        }
+
+        public void setLicensePlate(String licensePlate) {
+            this.licensePlate = licensePlate;
+        }
     }
 }

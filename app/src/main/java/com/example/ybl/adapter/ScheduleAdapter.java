@@ -1,5 +1,6 @@
 package com.example.ybl.adapter;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.ybl.R;
 import com.example.ybl.model.Schedule;
+import com.example.ybl.util.SessionManager;
 
 import java.util.List;
 
@@ -19,14 +21,17 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.Schedu
     private List<Schedule> scheduleList;
     private ScheduleClickListener clickListener;
 
+    private Context context;
+
     public interface ScheduleClickListener {
         void onStartTripClick(Schedule schedule);
         void onViewDetailsClick(Schedule schedule);
     }
 
-    public ScheduleAdapter(List<Schedule> scheduleList, ScheduleClickListener clickListener) {
+    public ScheduleAdapter(Context context, List<Schedule> scheduleList, ScheduleClickListener clickListener) {
         this.scheduleList = scheduleList;
         this.clickListener = clickListener;
+        this.context = context;
     }
 
     @NonNull
@@ -40,6 +45,9 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.Schedu
     public void onBindViewHolder(@NonNull ScheduleViewHolder holder, int position) {
         Schedule schedule = scheduleList.get(position);
         holder.bind(schedule, clickListener);
+        if(SessionManager.getInstance(context).getUserDetails().getRole().equalsIgnoreCase("supervisor")){
+            holder.btnStartTrip.setVisibility(View.GONE);
+        };
     }
 
     @Override
@@ -89,6 +97,10 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.Schedu
 
             // Set button visibility based on status
             setupButtons(schedule, clickListener);
+            setBtnValue(schedule.getStatus());
+
+
+
         }
 
         private String formatTime(String time) {
@@ -96,10 +108,20 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.Schedu
             return time; // You can format this as needed
         }
 
+        private void setBtnValue(String status){
+            if ("completed".equalsIgnoreCase(status)) {
+                btnStartTrip.setText("View Details");
+            } else if ("scheduled".equalsIgnoreCase(status)) {
+                btnStartTrip.setText("Create Trip");
+            }else {
+                btnStartTrip.setText("Start Trip");
+            }
+        }
         private void setStatusBackground(String status) {
             int backgroundRes = R.drawable.bg_status_pending;
             if ("completed".equalsIgnoreCase(status)) {
                 backgroundRes = R.drawable.bg_status_completed;
+                btnStartTrip.setVisibility(View.GONE);
             } else if ("in_progress".equalsIgnoreCase(status)) {
                 backgroundRes = R.drawable.bg_status_in_progress;
             } else if ("cancelled".equalsIgnoreCase(status)) {
@@ -109,6 +131,7 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.Schedu
         }
 
         private void setupButtons(Schedule schedule, ScheduleClickListener clickListener) {
+            btnStartTrip.setOnClickListener(v -> clickListener.onStartTripClick(schedule));
 
             btnViewDetails.setOnClickListener(v -> clickListener.onViewDetailsClick(schedule));
         }

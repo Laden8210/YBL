@@ -11,15 +11,22 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.ybl.R;
 import com.example.ybl.adapter.ScheduleAdapter;
 import com.example.ybl.interfaces.ApiCallback;
+import com.example.ybl.model.CreateTripRequest;
+import com.example.ybl.model.CreateTripResponse;
 import com.example.ybl.model.Schedule;
+import com.example.ybl.model.StartTripRequest;
+import com.example.ybl.model.TodayScheduleResponse;
+import com.example.ybl.model.Trip;
 import com.example.ybl.repository.DriverRepository;
 import com.example.ybl.view.ScheduleDetailsActivity;
 
@@ -31,10 +38,10 @@ import java.util.Locale;
 
 public class DriverScheduleFragment extends Fragment {
     private DriverRepository driverRepository;
+    private SwipeRefreshLayout swipeRefresh;
     private ProgressBar progressBar;
-    private CardView emptyState, errorState;
-    private TextView tvScheduleDate, tvTotalTrips, tvCompletedTrips, tvPendingTrips, tvError;
-    private Button btnRetry;
+    private CardView emptyState;
+    private TextView tvScheduleDate, tvTotalTrips, tvCompletedTrips, tvPendingTrips;
     private RecyclerView rvSchedule;
     private ScheduleAdapter scheduleAdapter;
     private List<Schedule> scheduleList = new ArrayList<>();
@@ -59,22 +66,20 @@ public class DriverScheduleFragment extends Fragment {
     }
 
     private void initViews(View view) {
+        swipeRefresh = view.findViewById(R.id.swipeRefresh);
         progressBar = view.findViewById(R.id.progressBar);
         emptyState = view.findViewById(R.id.emptyState);
-        errorState = view.findViewById(R.id.errorState);
         tvScheduleDate = view.findViewById(R.id.tvScheduleDate);
         tvTotalTrips = view.findViewById(R.id.tvTotalTrips);
         tvCompletedTrips = view.findViewById(R.id.tvCompletedTrips);
         tvPendingTrips = view.findViewById(R.id.tvPendingTrips);
-        tvError = view.findViewById(R.id.tvError);
-        btnRetry = view.findViewById(R.id.btnRetry);
         rvSchedule = view.findViewById(R.id.rvSchedule);
 
-        btnRetry.setOnClickListener(v -> fetchAndDisplaySchedule());
+        swipeRefresh.setOnRefreshListener(this::fetchAndDisplaySchedule);
     }
 
     private void setupRecyclerView() {
-        scheduleAdapter = new ScheduleAdapter(scheduleList, new ScheduleAdapter.ScheduleClickListener() {
+        scheduleAdapter = new ScheduleAdapter(getContext(), scheduleList, new ScheduleAdapter.ScheduleClickListener() {
             @Override
             public void onStartTripClick(Schedule schedule) {
                 startTrip(schedule);
@@ -98,13 +103,13 @@ public class DriverScheduleFragment extends Fragment {
     private void fetchAndDisplaySchedule() {
         showLoading();
 
-        driverRepository.getTodaySchedule(new ApiCallback<Schedule>() {
+        driverRepository.getTodaySchedule(new ApiCallback<TodayScheduleResponse>() {
             @Override
-            public void onSuccess(Schedule response) {
+            public void onSuccess(TodayScheduleResponse response) {
                 hideLoading();
-                if (response != null) {
+                if (response != null && response.getSchedule() != null && !response.getSchedule().isEmpty()) {
                     scheduleList.clear();
-                    scheduleList.add(response);
+                    scheduleList.addAll(response.getSchedule());
                     updateUI();
                 } else {
                     showEmptyState();
@@ -114,13 +119,13 @@ public class DriverScheduleFragment extends Fragment {
             @Override
             public void onError(String errorMessage) {
                 hideLoading();
-                showError("Failed to load schedule: " + errorMessage);
+                Toast.makeText(getContext(), "Failed to load schedule: " + errorMessage, Toast.LENGTH_LONG).show();
             }
 
             @Override
             public void onFailure(Throwable t) {
                 hideLoading();
-                showError("Network error: " + t.getMessage());
+                Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -156,17 +161,16 @@ public class DriverScheduleFragment extends Fragment {
     private void showLoading() {
         progressBar.setVisibility(View.VISIBLE);
         emptyState.setVisibility(View.GONE);
-        errorState.setVisibility(View.GONE);
         rvSchedule.setVisibility(View.GONE);
     }
 
     private void hideLoading() {
         progressBar.setVisibility(View.GONE);
+        swipeRefresh.setRefreshing(false);
     }
 
     private void showEmptyState() {
         emptyState.setVisibility(View.VISIBLE);
-        errorState.setVisibility(View.GONE);
         rvSchedule.setVisibility(View.GONE);
 
         // Reset stats to 0 when empty
@@ -175,28 +179,68 @@ public class DriverScheduleFragment extends Fragment {
         tvPendingTrips.setText("0");
     }
 
-    private void showError(String errorMessage) {
-        Log.d("DriverScheduleFragment", "showError: " + errorMessage);
-        errorState.setVisibility(View.VISIBLE);
-        emptyState.setVisibility(View.GONE);
-        rvSchedule.setVisibility(View.GONE);
-        tvError.setText(errorMessage);
-
-        // Reset stats to 0 on error
-        tvTotalTrips.setText("0");
-        tvCompletedTrips.setText("0");
-        tvPendingTrips.setText("0");
-    }
-
     private void showScheduleList() {
         rvSchedule.setVisibility(View.VISIBLE);
         emptyState.setVisibility(View.GONE);
-        errorState.setVisibility(View.GONE);
     }
 
     private void startTrip(Schedule schedule) {
-        Toast.makeText(getContext(), "Starting trip: " + schedule.getRoute().getRouteName(), Toast.LENGTH_SHORT).show();
-        // Implement start trip logic
+        if (schedule != null) {
+            createTripDialog(schedule);
+        }
+
+    }
+
+
+    private void createTripDialog(Schedule schedule) {
+        new AlertDialog.Builder(getContext())
+                .setTitle("Create Trip")
+                .setMessage("Are you sure you want to create this trip?")
+                .setPositiveButton("Create", (dialog, which) -> {
+                    createTrip(schedule);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+
+    private void createTrip(Schedule schedule) {
+        CreateTripRequest request = new CreateTripRequest(schedule.getId(), schedule.getBusId());
+        driverRepository.createTrip(request, new ApiCallback<CreateTripResponse>() {
+            @Override
+            public void onSuccess(CreateTripResponse response) {
+                Toast.makeText(getContext(), "Trip started successfully", Toast.LENGTH_SHORT).show();
+                fetchAndDisplaySchedule();
+                Log.d("DriverScheduleFragment", "Trip started successfully");
+
+                // Start location service
+                Intent serviceIntent = new Intent(getContext(), com.example.ybl.service.LocationUpdateService.class);
+                serviceIntent.putExtra("trip_id", response.getTripId());
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    getContext().startForegroundService(serviceIntent);
+                } else {
+                    getContext().startService(serviceIntent);
+                }
+
+                // Open Map
+                Intent mapIntent = new Intent(getContext(), com.example.ybl.view.DriverNavigationActivity.class);
+                mapIntent.putExtra(com.example.ybl.view.DriverNavigationActivity.EXTRA_SCHEDULE, schedule);
+                mapIntent.putExtra(com.example.ybl.view.DriverNavigationActivity.EXTRA_TRIP_ID, response.getTripId());
+                startActivity(mapIntent);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Toast.makeText(getContext(), "Failed to start trip: " + errorMessage, Toast.LENGTH_LONG).show();
+                Log.e("DriverScheduleFragment", "Failed to start trip: " + errorMessage);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Log.e("DriverScheduleFragment", "Network error: " + t.getMessage());
+            }
+        });
     }
 
     private void viewScheduleDetails(Schedule schedule) {

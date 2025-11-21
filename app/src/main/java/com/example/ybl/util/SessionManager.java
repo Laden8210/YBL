@@ -11,6 +11,7 @@ public class SessionManager {
     private static final String KEY_USER = "user";
     private static final String KEY_TOKEN = "token";
     private static final String KEY_IS_LOGGED_IN = "isLoggedIn";
+    public static final String ACTION_LOGOUT = "com.example.ybl.ACTION_LOGOUT";
 
     private final SharedPreferences pref;
     private final SharedPreferences.Editor editor;
@@ -53,6 +54,12 @@ public class SessionManager {
 
     public boolean isLoggedIn() {
         return pref.getBoolean(KEY_IS_LOGGED_IN, false);
+    }
+
+    public void updateUser(User user) {
+        String userJson = gson.toJson(user);
+        editor.putString(KEY_USER, userJson);
+        editor.apply();
     }
 
     public void logoutUser() {

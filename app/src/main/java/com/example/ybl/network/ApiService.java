@@ -1,7 +1,5 @@
 package com.example.ybl.network;
 
-
-
 import com.example.ybl.model.*;
 import retrofit2.Call;
 import retrofit2.http.*;
@@ -11,12 +9,17 @@ import java.util.Map;
 
 public interface ApiService {
 
-
     @POST("login")
     Call<BaseResponse<LoginResponse>> login(@Body LoginRequest loginRequest);
 
+    @POST("register")
+    Call<BaseResponse<LoginResponse>> register(@Body RegisterRequest registerRequest);
+
     @GET("profile")
     Call<BaseResponse<User>> getProfile();
+
+    @PUT("profile")
+    Call<BaseResponse<User>> updateProfile(@Body UpdateProfileRequest request);
 
     @POST("logout")
     Call<BaseResponse<Void>> logout();
@@ -51,25 +54,31 @@ public interface ApiService {
     Call<BaseResponse<DriverDashboard>> getDriverDashboard();
 
     @GET("driver/current-trip")
-    Call<BaseResponse<Trip>> getCurrentTrip();
+    Call<BaseResponse<Trip>> getDriverCurrentTrip();
 
     @GET("driver/today-schedule")
     Call<BaseResponse<TodayScheduleResponse>> getTodaySchedule();
 
     @POST("driver/start-trip")
-    Call<BaseResponse<Trip>> startTrip(@Body LocationRequest request);
+    Call<BaseResponse<Trip>> startTrip(@Body StartTripRequest request);
 
     @POST("driver/update-trip-location")
-    Call<BaseResponse<Void>> updateTripLocation(@Body LocationUpdateRequest request);
+    Call<BaseResponse<Void>> updateTripLocation(@Body UpdateLocationRequest request);
 
     @POST("driver/complete-trip")
-    Call<BaseResponse<Trip>> completeTrip(@Body LocationRequest request);
+    Call<BaseResponse<Trip>> completeTrip(@Body CompleteTripRequest request);
 
     @GET("driver/drop-points")
-    Call<BaseResponse<List<DropPoint>>> getDropPoints();
+    Call<BaseResponse<List<DropPoint>>> getDriverDropPoints();
 
     @POST("driver/confirm-drop-point/{dropPointId}")
     Call<BaseResponse<DropPoint>> confirmDropPoint(@Path("dropPointId") int dropPointId);
+
+    @POST("driver/issues")
+    Call<BaseResponse<Void>> reportIssue(@Body ReportIssueRequest request);
+
+    @POST("driver/create-trip")
+    Call<BaseResponse<CreateTripResponse>> createTrip(@Body CreateTripRequest createTripRequest);
 
     // Conductor Endpoints
     @GET("conductor/dashboard")

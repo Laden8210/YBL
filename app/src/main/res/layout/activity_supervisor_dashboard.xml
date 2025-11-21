@@ -7,15 +7,6 @@
     android:background="@color/background">
 
     <!-- Toolbar -->
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/primary_color"
-        app:titleTextColor="@color/white"
-        app:menu="@menu/supervisor_menu"
-        app:navigationIcon="@drawable/ic_bus_white"
-        app:title="Transport Supervisor" />
 
     <!-- Welcome Section -->
     <com.google.android.material.card.MaterialCardView

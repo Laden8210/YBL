@@ -50,4 +50,19 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    implementation ("com.github.bumptech.glide:glide:4.16.0")
+    implementation ("com.mapbox.maps:android:10.16.0")
+    implementation ("com.google.android.gms:play-services-location:21.0.1")
+    implementation ("com.mapbox.mapboxsdk:mapbox-sdk-geojson:5.9.0")
+    implementation ("com.mapbox.mapboxsdk:mapbox-sdk-turf:5.9.0")
+    implementation ("com.mapbox.navigation:android:2.15.1")
+    implementation("com.mapbox.plugin:maps-annotation:10.16.0")
+    implementation("com.mapbox.plugin:maps-locationcomponent:10.16.0")
+
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+
+    implementation (libs.swiperefreshlayout)
+
+
+
 }

@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.example.ybl.util.SessionManager;
 
+import android.content.Intent;
 import java.io.IOException;
 
 import okhttp3.Interceptor;
@@ -12,8 +13,10 @@ import okhttp3.Response;
 
 public class AuthInterceptor implements Interceptor {
     private final SessionManager sessionManager;
+    private final Context context;
 
     public AuthInterceptor(Context context) {
+        this.context = context;
         this.sessionManager = SessionManager.getInstance(context);
     }
 
@@ -31,6 +34,15 @@ public class AuthInterceptor implements Interceptor {
         }
 
         Request request = requestBuilder.build();
-        return chain.proceed(request);
+        Response response = chain.proceed(request);
+
+        if (response.code() == 401) {
+            // Unauthorized - trigger logout
+            Intent intent = new Intent(SessionManager.ACTION_LOGOUT);
+            intent.setPackage(context.getPackageName()); // Restrict to this app
+            context.sendBroadcast(intent);
+        }
+
+        return response;
     }
 }

@@ -7,6 +7,8 @@ import com.example.ybl.model.BaseResponse;
 import com.example.ybl.network.ApiClient;
 import com.example.ybl.network.ApiService;
 
+import org.json.JSONObject;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -31,7 +33,14 @@ public class BaseRepository {
                     String errorMessage = "Request failed";
                     if (response.errorBody() != null) {
                         try {
-                            errorMessage = response.errorBody().string();
+                            String errorBody = response.errorBody().string();
+
+                            JSONObject errorJson = new JSONObject(errorBody);
+                            if (errorJson.has("message")) {
+                                errorMessage = errorJson.getString("message");
+                            } else {
+                                errorMessage = errorBody;
+                            }
                         } catch (Exception e) {
                             errorMessage = "Unknown error occurred";
                         }
@@ -46,5 +55,4 @@ public class BaseRepository {
             }
         });
     }
-
 }
